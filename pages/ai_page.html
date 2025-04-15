@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ocean Fishing Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        /* Basic styling and theme */
+        :root {
+            --water-deep: #003973;
+            --water-medium: #005f9e;
+            --water-light: #3b9dcf;
+            --sand: #e6dac8;
+            --button-bg: #e74c3c; /* Red button */
+            --button-hover: #c0392b;
+            --text-light: #ffffff;
+            --text-dark: #333333;
+            --bubble-color: rgba(255, 255, 255, 0.7);
+            --font-game: 'Press Start 2P', cursive;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-game);
+            background-color: var(--sand);
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+
+        h1 {
+            color: var(--water-deep);
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.8rem; /* Adjusted size for font */
+            line-height: 1.4;
+        }
+
+        /* Main game container */
+        #game-container {
+            background: linear-gradient(to bottom, var(--water-light), var(--water-deep));
+            border: 5px solid var(--water-deep);
+            border-radius: 15px;
+            padding: 20px;
+            width: 90%;
+            max-width: 600px;
+            min-height: 300px; /* Ensure space for ocean */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            position: relative; /* For bubble positioning */
+            overflow: hidden; /* Keep bubbles inside */
+        }
+
+        /* Ocean area where bubbles appear */
+        #ocean {
+            width: 100%;
+            height: 150px; /* Area for bubbles */
+            position: relative;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        /* Bubbles element */
+        #bubbles {
+            width: 40px; /* Size of the bubble group */
+            height: 50px;
+            position: absolute;
+            bottom: 10px; /* Start near the bottom */
+            left: 50%; /* Default position, will be randomized */
+            transform: translateX(-50%);
+            display: none; /* Hidden initially */
+            animation: riseAndFade 1.5s linear forwards; /* Animation control */
+            z-index: 10;
+        }
+
+        /* Individual bubble styling */
+        .bubble {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--bubble-color);
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+        /* Position individual bubbles within the #bubbles container */
+        .bubble:nth-child(1) { top: 80%; left: 50%; transform: translate(-50%, -50%) scale(0.8); }
+        .bubble:nth-child(2) { top: 50%; left: 30%; transform: translate(-50%, -50%) scale(1); }
+        .bubble:nth-child(3) { top: 60%; left: 75%; transform: translate(-50%, -50%) scale(0.6); }
+        .bubble:nth-child(4) { top: 20%; left: 40%; transform: translate(-50%, -50%) scale(0.9); }
+        .bubble:nth-child(5) { top: 35%; left: 65%; transform: translate(-50%, -50%) scale(0.7); }
+
+
+        /* Bubble Animation */
+        @keyframes riseAndFade {
+            0% {
+                bottom: 10px;
+                opacity: 0.7;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                bottom: 120px; /* Rise towards the surface */
+                opacity: 0;
+            }
+        }
+
+        /* Controls and message area */
+        #controls {
+            text-align: center;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        #message {
+            font-size: 1rem; /* Adjusted size */
+            color: var(--text-light);
+            min-height: 30px; /* Prevent layout shift */
+            margin-bottom: 20px;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        /* Fishing button styling */
+        #fish-button {
+            font-family: var(--font-game);
+            font-size: 1rem; /* Adjusted size */
+            padding: 15px 30px;
+            background-color: var(--button-bg);
+            color: var(--text-light);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            /* Basic 3D effect */
+            border-bottom: 4px solid #a83326;
+        }
+
+        #fish-button:hover {
+            background-color: var(--button-hover);
+        }
+
+        #fish-button:active {
+            transform: translateY(2px); /* Simulate button press */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            border-bottom-width: 2px;
+        }
+
+        #fish-button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+            opacity: 0.7;
+            border-bottom-color: #71808e;
+        }
+
+        /* Inventory section */
+        #inventory {
+            margin-top: 30px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #inventory h2 {
+            font-size: 1.1rem; /* Adjusted size */
+            margin-bottom: 10px;
+            text-align: center;
+            color: var(--water-deep);
+        }
+
+        #caught-fish-list {
+            list-style: none;
+            padding: 0;
+            max-height: 150px; /* Limit height */
+            overflow-y: auto; /* Add scroll if needed */
+            font-size: 0.9rem; /* Adjusted size */
+        }
+
+        #caught-fish-list li {
+            padding: 5px 0;
+            border-bottom: 1px dashed var(--water-medium);
+            color: var(--text-dark);
+            display: flex; /* Use flexbox for alignment */
+            align-items: center; /* Center emoji and text vertically */
+            gap: 8px; /* Space between emoji and text */
+        }
+        #caught-fish-list li:last-child {
+            border-bottom: none;
+        }
+        /* Style for the emoji itself */
+        .fish-emoji {
+            font-size: 1.2em; /* Make emoji slightly larger */
+            display: inline-block;
+            width: 20px; /* Fixed width for alignment */
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Retro Fishing Fun!</h1>
+
+    <div id="game-container">
+        <div id="ocean">
+            <div id="bubbles">
+                <div class="bubble"></div>
+                <div class="bubble"></div>
+                <div class="bubble"></div>
+                <div class="bubble"></div>
+                <div class="bubble"></div>
+            </div>
+        </div>
+
+        <div id="controls">
+            <p id="message">Press the button to cast your line!</p>
+            <button id="fish-button">Cast Line</button>
+        </div>
+    </div>
+
+    <div id="inventory">
+        <h2>Caught Fish:</h2>
+        <ul id="caught-fish-list">
+            <li>(Nothing yet!)</li>
+        </ul>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const ocean = document.getElementById('ocean');
+            const bubblesElement = document.getElementById('bubbles');
+            const messageElement = document.getElementById('message');
+            const fishButton = document.getElementById('fish-button');
+            const caughtFishList = document.getElementById('caught-fish-list');
+
+            // --- Game State Variables ---
+            const fishTypes = [
+                "Carp", "Catfish", "Rainbow Trout", "Brown Trout",
+                "Smallmouth Bass", "Largemouth Bass", "Bluegill", "Perch"
+            ];
+            // --- NEW: Map fish types to emojis ---
+            const fishEmojiMap = {
+                "Carp": "🐟",
+                "Catfish": "🐡", // Using pufferfish emoji for variety
+                "Rainbow Trout": "🐠",
+                "Brown Trout": "🐠", // Can use the same for similar types
+                "Smallmouth Bass": "🎣", // Using fishing pole emoji as placeholder
+                "Largemouth Bass": "🎣", // Using fishing pole emoji as placeholder
+                "Bluegill": "🐟",
+                "Perch": "🐠",
+                // Add more mappings if needed
+            };
+            const defaultEmoji = "❓"; // Fallback emoji
+
+            let gameState = 'idle'; // idle, waiting, fishing, caught, missed
+            let canClick = false;   // Flag to check if clicking is allowed
+            let fishTimer = null;   // Timeout ID for fish appearing
+            let bubbleTimer = null; // Timeout ID for bubbles disappearing
+            const caughtFish = {}; // Object to store counts of caught fish
+
+            // --- Game Logic Functions ---
+
+            // Update the message display
+            function updateMessage(text) {
+                messageElement.textContent = text;
+            }
+
+            // Show bubbles at a random horizontal position
+            function showBubbles() {
+                const oceanWidth = ocean.offsetWidth;
+                const bubbleWidth = bubblesElement.offsetWidth;
+                const randomLeft = Math.random() * (oceanWidth - bubbleWidth);
+                bubblesElement.style.left = `${randomLeft}px`;
+                bubblesElement.style.transform = 'translateX(0)';
+
+                bubblesElement.style.display = 'block';
+                bubblesElement.style.animation = 'none';
+                void bubblesElement.offsetWidth; // Trigger reflow
+                bubblesElement.style.animation = 'riseAndFade 1.5s linear forwards';
+
+                gameState = 'fishing';
+                updateMessage("Fish On! Click Now!");
+                canClick = true;
+                fishButton.disabled = false;
+                fishButton.textContent = "Reel In!";
+
+                clearTimeout(bubbleTimer);
+                bubbleTimer = setTimeout(() => {
+                    if (gameState === 'fishing') {
+                        missFish();
+                    }
+                }, 1400);
+            }
+
+            // Hide the bubbles
+            function hideBubbles() {
+                bubblesElement.style.display = 'none';
+                canClick = false;
+            }
+
+            // Start the cycle of waiting for a fish
+            function startWaitingCycle() {
+                gameState = 'waiting';
+                updateMessage("Waiting for a bite...");
+                fishButton.textContent = "Waiting...";
+                fishButton.disabled = true;
+                hideBubbles();
+                canClick = false;
+
+                clearTimeout(fishTimer);
+                clearTimeout(bubbleTimer);
+
+                const waitTime = Math.random() * 5000 + 2000; // Wait 2-7 seconds
+                fishTimer = setTimeout(showBubbles, waitTime);
+            }
+
+            // Player successfully catches a fish
+            function catchFish() {
+                clearTimeout(bubbleTimer);
+                hideBubbles();
+                gameState = 'caught';
+                canClick = false;
+                fishButton.textContent = "Cast Line";
+                fishButton.disabled = false;
+
+                const caughtType = fishTypes[Math.floor(Math.random() * fishTypes.length)];
+                // --- Use emoji in the success message ---
+                const emoji = fishEmojiMap[caughtType] || defaultEmoji;
+                updateMessage(`Success! You caught a ${emoji} ${caughtType}!`);
+
+                caughtFish[caughtType] = (caughtFish[caughtType] || 0) + 1;
+                updateInventoryDisplay();
+
+                setTimeout(startWaitingCycle, 1500);
+            }
+
+            // Player misses the fish
+            function missFish() {
+                hideBubbles();
+                gameState = 'missed';
+                canClick = false;
+                fishButton.textContent = "Cast Line";
+                fishButton.disabled = false;
+
+                updateMessage("Oops! It got away!");
+
+                setTimeout(startWaitingCycle, 1500);
+            }
+
+            // Update the list of caught fish in the HTML (with emojis)
+            function updateInventoryDisplay() {
+                caughtFishList.innerHTML = ''; // Clear the list
+                const fishEntries = Object.entries(caughtFish);
+
+                if (fishEntries.length === 0) {
+                    caughtFishList.innerHTML = '<li>(Nothing yet!)</li>';
+                    return;
+                }
+
+                fishEntries.sort((a, b) => a[0].localeCompare(b[0]));
+
+                fishEntries.forEach(([fish, count]) => {
+                    const listItem = document.createElement('li');
+                    // --- Get the corresponding emoji ---
+                    const emoji = fishEmojiMap[fish] || defaultEmoji;
+                    // --- Create structure with emoji span ---
+                    listItem.innerHTML = `<span class="fish-emoji">${emoji}</span> ${fish}: ${count}`;
+                    caughtFishList.appendChild(listItem);
+                });
+            }
+
+            // Handle clicks on the fishing button
+            function handleFishButtonClick() {
+                if (gameState === 'idle') {
+                    startWaitingCycle();
+                } else if (gameState === 'fishing' && canClick) {
+                    catchFish();
+                } else if (gameState === 'waiting') {
+                    updateMessage("Too early! Wait for the bubbles!");
+                    clearTimeout(fishTimer); // Reset timer on early click
+                    startWaitingCycle(); // Restart wait immediately
+                }
+            }
+
+            // --- Initial Setup ---
+            fishButton.addEventListener('click', handleFishButtonClick);
+            updateInventoryDisplay(); // Initialize inventory display
+
+            updateMessage("Press 'Cast Line' to start fishing!");
+            gameState = 'idle';
+            fishButton.disabled = false;
+
+        });
+    </script>
+
+</body>
+</html>
+```
+
+**Changes Made:**
+
+1.  **CSS:** Added styles for `.fish-emoji` span within the list items (`#caught-fish-list li`) to control emoji size and alignment. Used flexbox on the `li` for better alignment.
+2.  **JavaScript:**
+    * Added a `fishEmojiMap` object to associate fish names with specific emojis.
+    * Included a `defaultEmoji` (❓) for any fish types not explicitly mapped.
+    * Modified `updateInventoryDisplay()`: It now looks up the emoji for each fish type and includes it in the list item's HTML using `<span class="fish-emoji">...</span>`.
+    * Updated the `catchFish()` success message to also include the emoji.
+
+Now, when you catch fish, you'll see their corresponding emoji displayed next to their name and count in the inventory li
